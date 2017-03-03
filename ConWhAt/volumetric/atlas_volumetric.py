@@ -34,20 +34,14 @@ class VolAtlas(Atlas):
   def compute_hit_stats(self,roi_file,idxs):
 
     """
-    idxs is a list of lists of vol ids for each file id
+    idxs correspond to the entries in the 'mappings' 
+    attribute of the atlas_info
+
+    'mappings' is a three element list of 
+    [name,file,volume] for each atlas structure
     
-    so something like
+    if idx=='all', all structures are analyzed
 
-
-    [0, [0,1,2,3,4,5,6...]  # - default for something like JHU
-    [0, [0,1,2,3,4,5,6,...],
-     1, [0,1,2,3,4,5,6,...],
-     2, [0,1,2,3,4,5,6,...]] # default for full connectome
-    [0, [0,4,6],
-     3, [2,7,9]]              # random selection 
-
-    numbers on the left are the file number
-    numbers on the right are the (4th dim) volume ids inside that file
  
     """
 
@@ -60,27 +54,22 @@ class VolAtlas(Atlas):
     roi_img = nib.load(roi_file)
 
 
-    file_res = []
+    res = []
 
-    for (file_idx,vol_idxs) in idxs:
+    if idxs == 'all': 
+      idxs = range(len(self.atlas_info['mappings']))
 
-      cnxns_file = self.atlas_info['files'][file_idx]
-      cnxns_img = nib.load(cnxns_file)
-
-      vol_res = []
-      for vol_idx in vol_idsx:
-
-        name = self.atlas_info['names'][file_idx][vol_idx]
-
-        cnxn_img = index_img(cnxns_img,vol_idx)
+    for idx in idxs:
       
-        comp = compare_images(roi_img,cnxn_img)
+      _name,_file,_vol = self.atlas_info['mappings'][idx]
+
+      cnxn_img = index_img(_file,_vol)
+
+      comp = compare_images(roi_img,cnxn_img)
   
-        vol_res.append(comp)
+      res.append([_name,_file,_vol,comp])
       
-      file_res.append(vol_res)
-
-    return file_res
+    return res
 
 
   def compute_roi_stats(self,fa_image,cnxn_ids):
