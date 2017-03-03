@@ -1,9 +1,16 @@
 
-def get_vol_atlas_info(atlas_name,fsl_data_dir = '/opt/fsl/5.0.9/fsl/data'):
+import yaml
+
+def get_vol_atlas_info(atlas_name):
 
   returndict = {'atlas_name':atlas_name}
 
   if atlas_name == 'JHU':
+
+    rl = open('../../config.yaml', 'r').readlines()
+    cfg = yaml.load(rl[0])
+    fsl_data_dir = cfg['fsl_data_dir']
+
 
     xml_file = fsl_data_dir + '/atlases/JHU-tracts.xml'
     nii_file = fsl_data_dir + '/atlases/JHU/JHU-ICBM-tracts-prob-2mm.nii.gz'
