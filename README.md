@@ -10,7 +10,7 @@
 
 ##Streamlinetric Atlas
 
-<img src="ConWhAt/doc/streamlinetric_atlas_construction_fig.png" alt="Streamlinetric Atlas" style="width: 200px;"/>
+<img src="ConWhAt/doc/streamlinetric_atlas_examples.png" alt="Streamlinetric Atlas" style="width: 200px;"/>
 
 
 
