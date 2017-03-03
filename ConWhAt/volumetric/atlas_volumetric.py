@@ -4,6 +4,7 @@ from ..base import Atlas,compare_images,ROIStats
 
 import nibabel as nib
 import numpy as np
+import pandas as pd
 
 class VolAtlas(Atlas):
   """
@@ -68,9 +69,13 @@ class VolAtlas(Atlas):
       comp = compare_images(roi_img,cnxn_img)
   
       res.append([_name,_file,_vol,comp])
-      
-    return res
 
+
+    df = pd.concat({r[0]: pd.DataFrame(r[3].values(),index=r[3].keys(),
+                                       columns=['val']) for r in res})
+    df.index.names = ['structure', 'metric']
+    
+    return res,df
 
   def compute_roi_stats(self,fa_image,cnxn_ids):
 
