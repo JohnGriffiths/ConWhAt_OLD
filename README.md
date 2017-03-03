@@ -4,11 +4,9 @@
 
 
 - [Overview](#overview)  
-- [More deets](#More deets)  
-- [Installation](#Installation)  
-- [Usage](#Usage)  
-
-
+- [More deets](#more-deets)  
+- [Installation](#installation)  
+- [Usage](#usage)  
 
 
 
@@ -25,6 +23,42 @@ The benefit of this approach is that a scientist/clinician/citizen can take a se
 That information can then be used together with the used parcellation's *canonical connectome* (normative group-averaged connectivity matrix), to obtain a lesion-modified structural (macro) connectome. This can be done very quickly with zero tractography data or analysis required, and as little as a list of numbers (voxel coordinates) as input. 
 
 
+##More deets
+
+###Two dimensions: Ontology and Representation
+
+The overview above described two kinds of white matter structure *ontology*: *tract-based* and *connectivity-based*. Whilst ConWhAt is mainly focused on the latter, it also completely supports tract-based analyses as well. 
+
+A second important distinction in diffusion MRI is between is the *representation* of anatomical data; the two main forms being *volumetric* and *streamlinetric* (tractography streamline-based). 
+
+Volumetric representations are simply standard 3D scalar nifti-type images. Streamlinetric representations are 
+vector-valued; basically they are lists of lists of coordinates. The distinction here is a little fuzzy, but it is significant does present significant differences in both analysis and intepretation at various points. Both volumetric and streamlinetric representations are supported in ConWhAt. 
+
+
+
+###Atlas Construction workflow
+
+The connectivity-based atlases in ConWhAt are constructed based on [dipy](http://nipy.org/dipy/) determinstic whole-brain HARDI tractography reconstructions using HCP WU-Minn corpus. These streamlines are then segmented with region pairs using a broad set of brain parcellations, yielding anatomical connectivity matrices and connectome edge-labelled streamline sets. The streamlines are then entered into both volumetric and a streamlinetric atlas construction pipelines:
+
+- Volumetric workfow: convert streamlines to track density images (visitation maps), spatially normalize, average  
+- Streamlinetric workflow: spatially normalize streamlines, concatenate, cluster
+
+<img src="ConWhAt/doc/atlas_construction_fig.png" alt="Atlas Construction Process" style="width: 200px;"/>
+
+
+
+####Volumetric atlas examples
+
+<img src="ConWhAt/doc/volumetric_atlas_examples.png" alt="Volumetric Atlas" style="width: 200px;"/>
+
+####Streamlinetric atlas examples
+
+<img src="ConWhAt/doc/streamlinetric_atlas_examples.png" alt="Streamlinetric Atlas" style="width: 200px;"/>
+
+
+
+
+
 ##Installation
 
 Grab from github
@@ -34,6 +68,7 @@ Grab from github
 Edit config file with external package directory locations, etc. 
 
 `...`
+
 
 
 ##Usage
@@ -64,7 +99,6 @@ Streamlinetric tract-based atlas analysis
 
 
 
-##More deets
 
 
 
@@ -78,20 +112,6 @@ Streamlinetric tract-based atlas analysis
 
 
 
-
-
-
-##Atlas Construction
-
-<img src="ConWhAt/doc/atlas_construction_fig.png" alt="Atlas Construction Process" style="width: 200px;"/>
-
-##Volumetric Atlas
-
-<img src="ConWhAt/doc/volumetric_atlas_examples.png" alt="Volumetric Atlas" style="width: 200px;"/>
-
-##Streamlinetric Atlas
-
-<img src="ConWhAt/doc/streamlinetric_atlas_examples.png" alt="Streamlinetric Atlas" style="width: 200px;"/>
 
 
 
