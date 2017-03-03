@@ -21,6 +21,13 @@ def get_vol_atlas_info(atlas_name):
     returndict['names'] = [names]
     returndict['files'] = [nii_file]
 
+    mappings = []
+    for _vol,_name in enumerate(names):
+
+      mappings.append([_name,nii_file,_vol])
+
+    returndict['mappings'] = mappings
+
 
   elif atlas_name == 'l2k8_sc33':
 
