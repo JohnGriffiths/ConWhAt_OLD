@@ -3,6 +3,13 @@
 ***Note - major refactoring in progress. Most things not working and/or implemented yet. Please come back soon!***
 
 
+- [Overview](#Overview)  
+- [More deets](#More deets)  
+- [Installation](#Installation)  
+- [Usage](#Usage)  
+
+
+
 
 
 ##Overview
