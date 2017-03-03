@@ -1,31 +1,27 @@
 
-
 from utils import get_vol_atlas_info
 from ..base import Atlas,HitStats,ROIStats
 
-
-
-
 class VolAtlas(Atlas):
   """
-
+  
   Volumetric atlas base class
-
+  
   tract-based atlas uses this class directly
   connectivity-based atlas subtypes from this
-
+  
   connectivity-based atlas mostly just adds in loops and things related to matrices
   ...not much of core functionality
   (modifications can also be done for tract-based atlas)
-
-
+  
+  
   """
-
+  
   def __init__(self,atlas_name):
-
+    
     atlas_info = get_vol_atlas_info(atlas_name)
     # get_atlas_info  will return a dict, which includes connectivity stuff if it's that kind of atlas
-
+    
     self.atlas_info = atlas_info
 
   def compute_hit_stats(self,roi_file,cnxn_ids):
@@ -45,10 +41,10 @@ class VolAtlas(Atlas):
 
       cnxn_img = index_img(cnxn_img,idx)
   
-      res.append(HitStats(roi_img,cnxn_img)
+      res.append(HitStats(roi_img,cnxn_img))
       
+    return res  
 
-   return res
 
 
   def compute_roi_stats(self,fa_image,cnxn_ids):
