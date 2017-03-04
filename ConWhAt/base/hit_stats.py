@@ -67,20 +67,26 @@ def compare_images(f1,f2, thr1=0,thr2=0):
   # Image 1 is the reference image
   # Image 2 is the image being tested
 
-  if type(f1) == str:    
+  if type(f1) == np.ndarray:
+    dat1 = f1
+  elif type(f1) == str:    
     img1 = nib.load(f1)
+    dat1 = img1.get_data()
   else: 
     img1 = f1
+    dat1 = img1.get_data()
 
-  if type(f2) == str:
-    img2= nib.load(f2)
-  else: 
+ 
+  if type(f2) == np.ndarray:
+    dat1 = f2
+  elif type(f2) == str:
+    img2 = nib.load(f2)
+    dat2 = img2.get_data()
+  else:
     img2 = f2
+    dat2 = img2.get_data()
 
-
-  dat1 = img1.get_data()
-  dat2 = img2.get_data()
-    
+ 
   dat1_thr = dat1.copy()
   dat1_thr[dat1_thr<thr1] = 0
     
@@ -97,7 +103,7 @@ def compare_images(f1,f2, thr1=0,thr2=0):
   thrbin_mul = dat1_thrbin*dat2_thrbin
   thrbininv_mul = (dat1_thrbin==0)*(dat2_thrbin==0)
   
-    
+  
   TP = thrbin_mul.sum()
   TN = thrbininv_mul.sum()
   FP = dat2_thrbin.sum() - TP
