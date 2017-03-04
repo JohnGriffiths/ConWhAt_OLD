@@ -1,4 +1,5 @@
 import os,numpy as np,sys,glob
+import pandas as pd
 import yaml
 
 def get_vol_atlas_info(atlas_name):
@@ -35,9 +36,9 @@ def get_vol_atlas_info(atlas_name):
     returndict['names'] = []
     returndict['files'] = []
  
-    at_dir = '/home/jgriffiths/Code/libraries_of_mine/github/ConWhAt/ConWhAt/atlases/volumetric/dipy_dsi_l2k8_sc33'
-
-    #at_dir  = os.path.abspath('../atlases/volumetric/dipy_dsi_sd4_l2k8_sc33')
+    at_dir  = os.path.abspath('../atlases/volumetric/dipy_dsi_sd4_l2k8_sc33')
+    
+    """
     at_fstr = at_dir + '/vismap_grp_cat_rois_v2_%s_norm.nii.gz'
 
     mappings = []
@@ -50,8 +51,13 @@ def get_vol_atlas_info(atlas_name):
         _vol = roi2
         mappings.append([_name,nii_file,_vol])
 
-    returndict['mappings'] = mappings
+    """
 
+    #mappings = np.loadtxt(at_dir + '/mappings.txt')
+
+    mappings = pd.read_csv(at_dir + '/mappings.txt', sep=',')
+
+    returndict['mappings'] = mappings
 
   else: 
 
