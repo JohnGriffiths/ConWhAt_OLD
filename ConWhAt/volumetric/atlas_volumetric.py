@@ -1,17 +1,18 @@
 
-from utils import get_vol_atlas_info
+from utils import get_vol_atlas_info,read_niigzip_vol
+
 from ..base import Atlas,compare_images,ROIStats
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
 
+
+
 class VolAtlas(Atlas):
   """
   
-  Volumetric atlas base class
-  
-  tract-based atlas uses this class directly
+  Volumetric atlas base class directly
   connectivity-based atlas subtypes from this
   
   connectivity-based atlas mostly just adds in loops and things related to matrices
@@ -32,7 +33,7 @@ class VolAtlas(Atlas):
     
     self.atlas_info = atlas_info
 
-  def compute_hit_stats(self,roi_file,idxs):
+  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip'):
 
     """
     idxs correspond to the entries in the 'mappings' 
@@ -69,9 +70,13 @@ class VolAtlas(Atlas):
       _file = self.at_dir + '/' + _nii_file
       _vol = _4dvolind
 
-      cnxn_img = index_img(_file,_vol)
+      if readwith=='index_img':
+        cnxn_img = index_img(_file,_vol)
+        cnxn_dat = cnxn_img.get_data()
+      elif readwith == 'indexgzip':
+        cnxn_dat = np.squeeze(read_niigzip_vol(_file,int(_vol)))
 
-      comp = compare_images(roi_img,cnxn_img)
+      comp = compare_images(roi_img,cnxn_dat)
   
       res.append([_name,_file,_vol,comp])
 
@@ -150,6 +155,11 @@ class VolAtlas(Atlas):
     df.index.names = ['structure', 'metric']
     
     return res,df
+
+
+
+
+
 
 
 
