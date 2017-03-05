@@ -1,6 +1,11 @@
 import os,numpy as np,sys,glob
 import pandas as pd
 import yaml
+import indexed_gzip as igzip
+import nibabel as nib
+
+
+
 
 def get_vol_atlas_info(atlas_name):
 
@@ -64,5 +69,36 @@ def get_vol_atlas_info(atlas_name):
     print 'atlas name not recognized' 
 
   return returndict
+
+
+
+
+
+
+
+def read_niigzip_vol(fname,volnum):
+  # Here we are usin 4MB spacing between
+  # seek points, and using a larger read
+  # buffer (than the default size of 16KB).
+  fobj = igzip.IndexedGzipFile(
+    filename=fname,
+    spacing=4194304,
+    readbuf_size=131072)
+
+  # Create a nibabel image using 
+  # the existing file handle.
+  fmap = nib.Nifti1Image.make_file_map()
+  fmap['image'].fileobj = fobj
+  image = nib.Nifti1Image.from_file_map(fmap)
+
+  # Use the image ArrayProxy to access the 
+  # data - the index will automatically be
+  # built as data is accessed.
+  dat = np.squeeze(image.dataobj[:, :, :, volnum])
+
+  return dat
+
+
+
 
 
