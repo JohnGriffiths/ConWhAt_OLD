@@ -78,7 +78,7 @@ def compare_images(f1,f2, thr1=0,thr2=0):
 
  
   if type(f2) == np.ndarray:
-    dat1 = f2
+    dat2 = f2
   elif type(f2) == str:
     img2 = nib.load(f2)
     dat2 = img2.get_data()
