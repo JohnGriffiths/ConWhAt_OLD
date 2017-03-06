@@ -100,5 +100,71 @@ def read_niigzip_vol(fname,volnum):
 
 
 
+def get_bounding_box_inds(dat):
+    
+  nzx,nzy,nzz = np.nonzero(dat>0)
+  xmin,xmax = nzx.min(),nzx.max()
+  ymin,ymax = nzy.min(),nzy.max()
+  zmin,zmax = nzz.min(),nzz.max()
+    
+  minmaxarr = np.array([[xmin,xmax],[ymin,ymax],[zmin,xmax]])    
+    
+  return minmaxarr
+  
+    
+    
+def plot_cube_from_bb(bb,ax=None,c='b'):
+
+  corners = np.array(list(product(bb[0],
+                                  bb[1],
+                                  bb[2])))
+    
+  cornerpairs = list(combinations(corners,2))
+
+  linestoplot = [(s,e) for (s,e) in cornerpairs if ((np.abs(s-e) == 0).sum() == 2)]
+    
+
+  if not ax:
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.set_aspect('equal')
+
+    
+  for (s,e) in linestoplot: 
+    ax.plot3D(*zip(s,e), color=c) 
+        
+    
+    
+  
+def plot_vol_scatter(dat,ax=None, pointint = 50,c='b',alpha=0.2,s=20.,
+                     xlim=[0,100],ylim=[0,100],zlim=[0,100],marker='o',figsize=(10,10),
+                     linewidth=0.01):
+    
+  xs,ys,zs = np.nonzero(dat>0)    
+  idx = np.arange(0,xs.shape[0],pointint)
+
+  if not ax: 
+    fig = plt.figure(figsize=figsize)
+    ax = fig.gca(projection='3d')
+    ax.set_aspect('equal')
+    ax.set_xlim([xlim[0],xlim[1]])  
+    ax.set_ylim([ylim[0],ylim[1]])
+    ax.set_zlim([zlim[0],zlim[1]])
+
+  ax.scatter3D(xs[idx],ys[idx],zs[idx],c=c,alpha=alpha,s=s, marker=marker,linewidths=linewidth)
+    
+    
+def get_intersection(bba,bbb):
+    
+  (xa1,xa2),(ya1,ya2),(za1,za2) = bba
+  (xb1,xb2),(yb1,yb2),(zb1,zb2) = bbb
+    
+  SI = max(0, min(xa2,xb2) - max(xa1,xb1)) \
+     * max(0, min(ya2,yb2) - max(ya1,yb1)) \
+     * max(0, min(za2,zb2) - max(za1,zb1))
+
+  return SI
+
+
 
 
