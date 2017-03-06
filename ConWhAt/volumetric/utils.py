@@ -4,6 +4,20 @@ import yaml
 import indexed_gzip as igzip
 import nibabel as nib
 
+from itertools import product,combinations
+
+from matplotlib import pyplot
+
+import nibabel as nib
+
+from nilearn.plotting import plot_stat_map
+
+from nilearn.image import index_img
+
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import pyplot as plt
+import numpy as np
+from itertools import product,combinations
 
 
 
