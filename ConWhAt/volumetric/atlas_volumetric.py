@@ -40,7 +40,7 @@ class VolAtlas(Atlas):
     
     self.image_file_mappings = pd.read_csv(self.atlas_dir + '/mappings.txt', sep=',')
 
-    self.cnxn_bboxes = pd.read_csv(self.atlas_dir + '/bounding_boxes.txt', sep=',')
+    self.bboxes = pd.read_csv(self.atlas_dir + '/bounding_boxes.txt', sep=',')
 
 
   def compute_roi_bb_overlaps(self,roi_file):
@@ -49,7 +49,7 @@ class VolAtlas(Atlas):
 
     bb_isoverlapping,bb_propoverlapping = [],[]
     
-    for bb_it,bb in enumerate(self.bbs.ix[1:].values):
+    for bb_it,bb in enumerate(self.bboxes.ix[1:].values):
 
       if True in np.isnan(bb):
         SI = 0.
