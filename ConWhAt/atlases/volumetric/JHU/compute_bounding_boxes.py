@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 from nilearn.image import index_img
@@ -36,4 +35,6 @@ df_info= pd.DataFrame(info)
 df_info = df_info.T.set_index([0]).T
 
 df_info.to_csv('bounding_boxes.txt', sep=',',index=False)
+
+
 
