@@ -33,7 +33,18 @@ class VolAtlas(Atlas):
     
     self.atlas_info = atlas_info
 
-  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip'):
+
+  def compute_roi_bb_overlaps(self,roi_file):
+
+    bb_overlaps = []
+    for bb_it,bb in enumerate(self.bbs):
+      SI = get_intersection(roi_file,bb)
+      bb_overlaps.append(SI)
+
+    return bb_overlaps
+
+
+  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip',bb_overlaps=[]):
 
     """
     idxs correspond to the entries in the 'mappings' 
@@ -54,12 +65,17 @@ class VolAtlas(Atlas):
     print 'computing hit stats for roi %s' % roi_file
 
     roi_img = nib.load(roi_file)
+    roi_dat = roi_img.get_data()
 
 
     res = []
 
     if idxs == 'all': 
       idxs = range(len(self.atlas_info['mappings']))
+
+    # only read files with overlapping bounding boxes
+    idxs = [idx for idx in idxs if idx in bb_overlaps]
+ 
 
     for idx in idxs:
       
