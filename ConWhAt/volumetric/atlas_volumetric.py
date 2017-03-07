@@ -1,12 +1,15 @@
 
-from utils import get_vol_atlas_info,read_igzip_slice
+from utils import get_vol_atlas_info,read_igzip_slice,get_intersection,get_bounding_box_inds
+
 
 from ..base import Atlas,compare_images,ROIStats
 
+import os
 import nibabel as nib
 import numpy as np
 import pandas as pd
 
+import ConWhAt
 
 
 class VolAtlas(Atlas):
@@ -28,23 +31,40 @@ class VolAtlas(Atlas):
 
   def __init__(self,atlas_name):
     
-    atlas_info = get_vol_atlas_info(atlas_name)
+    #atlas_info = get_vol_atlas_info(atlas_name)
     # get_atlas_info  will return a dict, which includes connectivity stuff if it's that kind of atlas
     
-    self.atlas_info = atlas_info
+    #self.atlas_info = atlas_info
+
+    self.atlas_dir = os.path.split(ConWhAt.__file__)[0]  + '/atlases/volumetric/%s' %atlas_name
+    
+    self.image_file_mappings = pd.read_csv(self.atlas_dir + '/mappings.txt', sep=',')
+
+    self.cnxn_bboxes = pd.read_csv(self.atlas_dir + '/bounding_boxes.txt', sep=',')
 
 
   def compute_roi_bb_overlaps(self,roi_file):
 
-    bb_overlaps = []
-    for bb_it,bb in enumerate(self.bbs):
-      SI = get_intersection(roi_file,bb)
-      bb_overlaps.append(SI)
+    
 
-    return bb_overlaps
+    bb_isoverlapping,bb_propoverlapping = [],[]
+    
+    for bb_it,bb in enumerate(self.bbs.ix[1:].values):
+
+      if True in np.isnan(bb):
+        SI = 0.
+      else: 
+        bb = [[bb[0],bb[1]],[bb[2],bb[3]],[bb[4],bb[5]]]
+        SI = get_intersection(roi_file,bb)
+      bb_isoverlapping.append(SI!=0)
+      bb_propoverlapping.append(SI)
 
 
-  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip',bb_overlaps=[]):
+    return bb_isoverlapping,bb_propoverlapping
+
+
+
+  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip',bb_isoverlapping=[]):
 
     """
     idxs correspond to the entries in the 'mappings' 
@@ -74,8 +94,9 @@ class VolAtlas(Atlas):
       idxs = range(len(self.atlas_info['mappings']))
 
     # only read files with overlapping bounding boxes
-    idxs = [idx for idx in idxs if idx in bb_overlaps]
- 
+    bb_isoverlapping_idx = np.nonzero(bb_isoverlapping)[0]
+    idxs = [idx for idx in idxs if idx in bb_isoverlapping_idx]
+
 
     for idx in idxs:
       
@@ -90,7 +111,7 @@ class VolAtlas(Atlas):
         cnxn_img = index_img(_file,_vol)
         cnxn_dat = cnxn_img.get_data()
       elif readwith == 'indexgzip':
-        cnxn_dat = np.squeeze(read_niigzip_vol(_file,int(_vol)))
+        cnxn_dat = np.squeeze(read_igzip_slice(_file,int(_vol)))
 
       comp = compare_images(roi_img,cnxn_dat)
   
@@ -105,7 +126,9 @@ class VolAtlas(Atlas):
 
 
 
-  def compute_hit_stats_test(self,roi_file,idxs):
+  def compute_hit_stats_test(self,roi_file,idxs,readwith='indexgzip',bb_isoverlapping=[]):
+
+
     """
     idxs correspond to the entries in the 'mappings' 
     attribute of the atlas_info
@@ -129,8 +152,13 @@ class VolAtlas(Atlas):
 
     res = []
 
-    if idxs == 'all': 
+    if idxs == 'all':
       idxs = range(len(self.atlas_info['mappings']))
+
+    # only read files with overlapping bounding boxes
+    bb_isoverlapping_idx = np.nonzero(bb_isoverlapping)[0]
+    idxs = [idx for idx in idxs if idx in bb_isoverlapping_idx]
+
 
     mappings = self.atlas_info['mappings']
 
@@ -173,17 +201,12 @@ class VolAtlas(Atlas):
     return res,df
 
 
-
-
-
-
-
-
-
   def compute_roi_stats(self,fa_image,cnxn_ids):
 
     res = ROIStats()
     print 'blah'
+
+
 
 
 class VolTractAtlas(VolAtlas):
@@ -196,30 +219,5 @@ class VolConnAtlas(VolAtlas):
   def __init__(self, atlas_name):
     VolAtlas.__init__(self, atlas_name)
 
-
-
-
-
-
-
-
-
-
-
-  def compute_roi_stats(self,fa_image,cnxn_ids):
-
-    res = ROIStats()
-    print 'blah'
-
-
-class VolTractAtlas(VolAtlas):
-  def __init__(self, atlas_name):
-    VolAtlas.__init__(self, atlas_name)
-
-
-
-class VolConnAtlas(VolAtlas):
-  def __init__(self, atlas_name):
-    VolAtlas.__init__(self, atlas_name)
 
 
