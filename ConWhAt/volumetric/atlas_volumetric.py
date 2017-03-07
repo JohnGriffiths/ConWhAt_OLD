@@ -1,5 +1,5 @@
 
-from utils import get_vol_atlas_info,read_niigzip_vol
+from utils import get_vol_atlas_info,read_igzip_slice
 
 from ..base import Atlas,compare_images,ROIStats
 
