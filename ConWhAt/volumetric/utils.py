@@ -86,46 +86,84 @@ def get_vol_atlas_info(atlas_name):
 
 
 
-
-
-
-
-def read_niigzip_vol(fname,volnum):
+def read_igzip_slice(fname,volnum):
+  
   # Here we are usin 4MB spacing between
   # seek points, and using a larger read
   # buffer (than the default size of 16KB).
   fobj = igzip.IndexedGzipFile(
-    filename=fname,
-    spacing=4194304,
-    readbuf_size=131072)
-
+      filename=fname,#'big_image.nii.gz',
+      spacing=4194304,
+      readbuf_size=131072)
+    
   # Create a nibabel image using 
   # the existing file handle.
   fmap = nib.Nifti1Image.make_file_map()
   fmap['image'].fileobj = fobj
   image = nib.Nifti1Image.from_file_map(fmap)
-
-  # Use the image ArrayProxy to access the 
+    
+    
+  # Use the image ArrayProxy to access the  
   # data - the index will automatically be
   # built as data is accessed.
   dat = np.squeeze(image.dataobj[:, :, :, volnum])
-
+    
   return dat
+
+
+def read_igzip_multislice(fname,volnums):
+  
+  # Here we are usin 4MB spacing between
+  # seek points, and using a larger read
+  # buffer (than the default size of 16KB).
+  fobj = igzip.IndexedGzipFile(
+      filename=fname,#'big_image.nii.gz',
+      spacing=4194304,
+      readbuf_size=131072)
+    
+  # Create a nibabel image using 
+  # the existing file handle.
+  fmap = nib.Nifti1Image.make_file_map()
+  fmap['image'].fileobj = fobj
+  image = nib.Nifti1Image.from_file_map(fmap)
+    
+    
+  # Use the image ArrayProxy to access the  
+  # data - the index will automatically be
+  # built as data is accessed.
+  #dats = np.array([np.squeeze(image.dataobj[:, :, :, int(volnum)]) for volnum in volnums])
+  
+  res=np.array([(image.dataobj[:, :, :, int(volnum)]) for volnum in volnums])
+
+  dims  = res.shape
+  res = res.reshape([dims[1],dims[2],dims[3],dims[0]])
+    
+  return res
+
+
 
 
 
 def get_bounding_box_inds(dat):
-    
-  nzx,nzy,nzz = np.nonzero(dat>0)
-  xmin,xmax = nzx.min(),nzx.max()
-  ymin,ymax = nzy.min(),nzy.max()
-  zmin,zmax = nzz.min(),nzz.max()
-    
-  minmaxarr = np.array([[xmin,xmax],[ymin,ymax],[zmin,xmax]])    
-    
-  return minmaxarr
   
+  if (dat>0).sum()  > 0:
+ 
+    nzx,nzy,nzz = np.nonzero(dat>0)
+    xmin,xmax = nzx.min(),nzx.max()
+    ymin,ymax = nzy.min(),nzy.max()
+    zmin,zmax = nzz.min(),nzz.max()
     
+    minmaxarr = np.array([[xmin,xmax],[ymin,ymax],[zmin,xmax]])    
+    
+    return minmaxarr
+
+  else: 
+
+    print 'no nonzero voxels'
+    #return np.nan
+    return [(np.nan,np.nan),(np.nan,np.nan),(np.nan,np.nan)]
+
+
     
 def plot_cube_from_bb(bb,ax=None,c='b'):
 
