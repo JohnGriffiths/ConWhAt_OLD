@@ -230,8 +230,87 @@ class VolTractAtlas(VolAtlas):
 
 
 class VolConnAtlas(VolAtlas):
-  def __init__(self, atlas_name):
+
+  def __init__(self, atlas_name, conn_name = 'weights'):
     VolAtlas.__init__(self, atlas_name)
+
+    self.load_connectivity(conn_name)
+
+
+
+  def load_connectivity(self,conn_name):
+
+
+    weights_file = '%s/%s.txt' %(self.at_dir,conn_name)
+    tract_lengths_file = '%s/tract_lengths.txt' % self.at_dir
+    region_labels_file = '%s/region_labels.txt' % self.at_dir
+    region_xyzs_file = '%s/region_xyzs.txt'  %self.at_dir
+    region_nii_file = '%s/region_masks.nii.gz' %self.at_dir
+    hemis_file = '%s/hemispheres.txt' % self.at_dir
+    ctx_file = '%s/cortex.txt' %self.at_dir
+
+    regmap_fsav_lh_file = '%s/region_mapping_fsav_lh.txt' % self.at_dir
+    regmap_fsav_rh_file = '%s/region_mapping_fsav_rh.txt' % self.at_dir  
+   
+ 
+    if os.path.isfile(weights_file): 
+      self.weights = np.loadtxt(weights_file)
+      self.weights_file = weights_file
+
+    if os.path.isfile(tract_lengths_file): 
+      self.tract_lengths = np.loadtxt(tract_lengths_file)
+      self.tract_lengths_file = tract_lengths_file
+
+
+    if os.path.isfile(region_labels_file):
+      self.region_labels = np.loadtxt(region_labels_file)
+      self.region_labels_file = region_labels_file
+
+    if os.path.isfile(region_xyz_file):
+      self.region_xyzs = np.loadtxt(region_xyzs_file)
+      self.region_xyzs_file = region_xyzs_file
+
+    if os.path.isfile(region_nii_file): 
+      self.region_nii_file = region_nii_file
+
+
+    if os.path.isfile(hemis_file): 
+      self.hemis_file = hemis_file
+      self.hemispheres = np.loadtxt(hemis_file)
+ 
+    if os.path.isfile(ctx_file): 
+      self.cortex = np.loadtxt(ctx_file)
+
+
+    if os.path.isfile(regmap_fsav_lh_file) and os.path.isfile(regmap_fsav_rh_file):
+
+      self.fsaverage_region_mapping = True
+
+      self.region_mapping_lh_file = regmap_fsav_lh_file
+      self.region_mapping_rh_file = regmap_fsav_rh_file
+
+      # (should we load these on initialization?)
+      self.region_mapping_lh = np.loadtxt(regmap_fsav_lh_file)
+      self.region_mapping_rh = np.loadtxt(regmap_fsav_rh_file)
+     
+      cfg_file = '../../config.yaml'
+      rl = open(cfg_file, 'r').readlines()
+      cfg = yaml.load(rl[0])
+      fs_subjects_dir = cfg['fs_subjects_dir']
+      
+      self.surf_lh_file = '%s/fsaverage/surf/lh.white' %fs_subjects_dir
+      self.surf_rh_file = '%s/fsaverage/surf/rh.white' %fs_subjects_dir
+
+
+
+
+
+
+
+
+            
+
+
 
 
 
