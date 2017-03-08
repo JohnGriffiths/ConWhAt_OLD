@@ -31,11 +31,6 @@ class VolAtlas(Atlas):
 
   def __init__(self,atlas_name):
     
-    #atlas_info = get_vol_atlas_info(atlas_name)
-    # get_atlas_info  will return a dict, which includes connectivity stuff if it's that kind of atlas
-    
-    #self.atlas_info = atlas_info
-
     self.atlas_dir = os.path.split(ConWhAt.__file__)[0]  + '/atlases/volumetric/%s' %atlas_name
     
     self.image_file_mappings = pd.read_csv(self.atlas_dir + '/mappings.txt', sep=',')
@@ -43,28 +38,28 @@ class VolAtlas(Atlas):
     self.bboxes = pd.read_csv(self.atlas_dir + '/bounding_boxes.txt', sep=',')
 
 
-  def compute_roi_bb_overlaps(self,roi_file):
+  def compute_roi_bbox_overlaps(self,roi_file):
 
+    roi_bbox = get_bounding_box_inds(roi_file) 
+
+    bbox_isol,bbox_propol = [],[]
     
+    for ix in self.bboxes.index:
 
-    bb_isoverlapping,bb_propoverlapping = [],[]
-    
-    for bb_it,bb in enumerate(self.bboxes.ix[1:].values):
+      bbox = self.bboxes.ix[ix].values
 
-      if True in np.isnan(bb):
-        SI = 0.
+      if True in np.isnan(bbox): SI = 0.
       else: 
-        bb = [[bb[0],bb[1]],[bb[2],bb[3]],[bb[4],bb[5]]]
-        SI = get_intersection(roi_file,bb)
-      bb_isoverlapping.append(SI!=0)
-      bb_propoverlapping.append(SI)
+        bbox = [[bbox[0],bbox[1]],[bbox[2],bbox[3]],[bbox[4],bbox[5]]]
+        SI = get_intersection(roi_bbox,bbox)
+      bbox_isol.append(SI!=0)
+      bbox_propol.append(SI)
+
+    return bbox_isol,bbox_propol
 
 
-    return bb_isoverlapping,bb_propoverlapping
 
-
-
-  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip',bb_isoverlapping=[]):
+  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip'):
 
     """
     idxs correspond to the entries in the 'mappings' 
@@ -90,32 +85,28 @@ class VolAtlas(Atlas):
 
     res = []
 
-    if idxs == 'all': 
-      idxs = range(len(self.atlas_info['mappings']))
+    if idxs == 'all': idxs = range(self.image_file_mappings.shape[0])
 
     # only read files with overlapping bounding boxes
-    bb_isoverlapping_idx = np.nonzero(bb_isoverlapping)[0]
-    idxs = [idx for idx in idxs if idx in bb_isoverlapping_idx]
-
+    bbox_isol,bbox_propol = self.compute_roi_bbox_overlaps(roi_file) #est_file)
+    bbox_isol_idx = np.nonzero(bbox_isol)[0]
+    idxs = [idx for idx in idxs if idx in bbox_isol_idx]
 
     for idx in idxs:
       
       #_name,_file,_vol = self.atlas_info['mappings'][idx]
 
-      _name,_nii_file,_nii_file_id,_4dvolind = self.atlas_info['mappings'].ix[idx]
-
-      _file = self.at_dir + '/' + _nii_file
-      _vol = _4dvolind
+      _name,_nii_file,_nii_file_id,_4dvolind = self.image_file_mappings.ix[idx]
 
       if readwith=='index_img':
-        cnxn_img = index_img(_file,_vol)
+        cnxn_img = index_img(_nii_file,_4dvolind)
         cnxn_dat = cnxn_img.get_data()
       elif readwith == 'indexgzip':
-        cnxn_dat = np.squeeze(read_igzip_slice(_file,int(_vol)))
+        cnxn_dat = np.squeeze(read_igzip_slice(_nii_file,int(_4dvolind)))
 
       comp = compare_images(roi_img,cnxn_dat)
   
-      res.append([_name,_file,_vol,comp])
+      res.append([_name,_nii_file,_4dvolind,comp])
 
 
     df = pd.concat({r[0]: pd.DataFrame(r[3].values(),index=r[3].keys(),
@@ -126,8 +117,7 @@ class VolAtlas(Atlas):
 
 
 
-  def compute_hit_stats_test(self,roi_file,idxs,readwith='indexgzip',bb_isoverlapping=[]):
-
+  def compute_hit_stats_test(self,roi_file,idxs,readwith='indexgzip'):
 
     """
     idxs correspond to the entries in the 'mappings' 
@@ -152,21 +142,20 @@ class VolAtlas(Atlas):
 
     res = []
 
-    if idxs == 'all':
-      idxs = range(len(self.atlas_info['mappings']))
+    if idxs == 'all': idxs = range(self.image_file_mappings.shape[0])
 
     # only read files with overlapping bounding boxes
-    bb_isoverlapping_idx = np.nonzero(bb_isoverlapping)[0]
-    idxs = [idx for idx in idxs if idx in bb_isoverlapping_idx]
+    bbox_isol,bbox_propol = self.compute_roi_bbox_overlaps(roi_file) #est_file)
+    bbox_isol_idx = np.nonzero(bbox_isol)[0]
+    idxs = [idx for idx in idxs if idx in bbox_isol_idx]
 
 
-    mappings = self.atlas_info['mappings']
+    mappings = self.image_file_mappings
 
     # group together the nifti files for each index
 
     # - get all unique file ids for the supplied indices
-    file_ids = np.unique(mappings.ix[idxs]['nii_file_id'])
-
+    file_ids = np.unique(mappings['nii_file_id'])
     # - run through each file, load in, and grab the volume indices
     for file_id in file_ids:
       
@@ -174,30 +163,34 @@ class VolAtlas(Atlas):
       idxsforthisfile = np.nonzero(mappings['nii_file_id'] == file_id)[0]
       idxstouse = [i for i in idxsforthisfile if i in idxs]
 
+      if len(idxstouse) >0:
 
-      # - load the image
-      nii_f = self.at_dir + '/' + mappings.ix[idxstouse[0]]['nii_file']
-      nii_img = nib.load(nii_f)
-      nii_dat = nii_img.get_data()
+        # - load the image
+        nii_f = mappings.ix[idxstouse[0]]['nii_file']
+        nii_img = nib.load(nii_f)
+        nii_dat = nii_img.get_data()
 
 
-      namesforthisfile = list(mappings.ix[idxstouse]['name'].values)
-      volsforthisfile = list(mappings.ix[idxstouse]['4dvolind'].values)
+        namesforthisfile = list(mappings.ix[idxstouse]['name'].values)
+        volsforthisfile = list(mappings.ix[idxstouse]['4dvolind'].values)
     
    
-      for v,n in zip(volsforthisfile,namesforthisfile):
+        for v,n in zip(volsforthisfile,namesforthisfile):
 
-        this_dat = np.squeeze(nii_dat[:,:,:,v])
-        #this_img = nib.Nifti1Image(nii_dat[:,:,:,v]index_img(nii_img,v)
+          this_dat = np.squeeze(nii_dat[:,:,:,v])
+          #this_img = nib.Nifti1Image(nii_dat[:,:,:,v]index_img(nii_img,v)
 
-        comp = compare_images(roi_img,this_dat)
+          comp = compare_images(roi_img,this_dat)
 
-        res.append([n,nii_f,v,comp])
+          res.append([n,nii_f,v,comp])
 
-    df = pd.concat({r[0]: pd.DataFrame(r[3].values(),index=r[3].keys(),
+    if len(res)>0: 
+      df = pd.concat({r[0]: pd.DataFrame(r[3].values(),index=r[3].keys(),
                                        columns=['val']) for r in res})
-    df.index.names = ['structure', 'metric']
-    
+      df.index.names = ['structure', 'metric']
+    else: 
+      res,df = [],[]  
+
     return res,df
 
 
