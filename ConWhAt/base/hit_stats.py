@@ -101,14 +101,15 @@ def compare_images(f1,f2, thr1=0,thr2=0):
 
     
   thrbin_mul = dat1_thrbin*dat2_thrbin
+    
   thrbininv_mul = (dat1_thrbin==0)*(dat2_thrbin==0)
   
   
   TP = thrbin_mul.sum()
   TN = thrbininv_mul.sum()
-  FP = dat2_thrbin.sum() - TP
-  FN = thrbininv_mul.sum()-TN
-    
+  FP = dat2_thrbin.sum()      - TP
+  FN = (dat2_thrbin==0).sum() - TN
+  
   hit_stats = get_stats(TP,TN,FP,FN)
     
   res = hit_stats
