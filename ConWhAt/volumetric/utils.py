@@ -25,6 +25,7 @@ def get_vol_atlas_info(atlas_name):
 
   returndict = {'atlas_name':atlas_name}
 
+
   if atlas_name == 'JHU':
 
     cfg_file = os.path.abspath('../../config.yaml')
@@ -87,7 +88,9 @@ def get_vol_atlas_info(atlas_name):
 
 
 def read_igzip_slice(fname,volnum):
-  
+ 
+  volnum = int(volnum)
+ 
   # Here we are usin 4MB spacing between
   # seek points, and using a larger read
   # buffer (than the default size of 16KB).
@@ -145,8 +148,13 @@ def read_igzip_multislice(fname,volnums):
 
 
 def get_bounding_box_inds(dat):
-  
-  if (dat>0).sum()  > 0:
+ 
+  if type(dat) == str: 
+    if os.path.isfile(dat): 
+      img = nib.load(dat)
+      dat = img.get_data()
+
+  if ((dat>0)).astype(float).sum()  > 0:
  
     nzx,nzy,nzz = np.nonzero(dat>0)
     xmin,xmax = nzx.min(),nzx.max()
