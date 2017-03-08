@@ -333,17 +333,12 @@ class VolConnAtlas(VolAtlas):
       roi1 = int(roi1); roi2 = int(roi2)
       ad = ifm.to_dict()
       ad.update(bbs.ix[idx])
+
       ad['idx'] = idx
       ad['weight'] = self.weights[roi1,roi2]
 
-      def gethemi(num):
-        if num == 1: return 'L'
-        else:        return 'R'
       n1,n2 = G.node[roi1],G.node[roi2]
-      fullname  = gethemi(n1['hemisphere']) + '_' + n1['region_label']
-      fullname += '_to_'
-      fullname += gethemi(n2['hemisphere']) + '_' + n2['region_label']
-
+      fullname = n1['region_label'] + '_to_' + n2['region_label']
       ad['fullname'] = fullname
 
       G.add_edge(roi1,roi2,attr_dict=ad)
