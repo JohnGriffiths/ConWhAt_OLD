@@ -1,6 +1,5 @@
 
-from utils import get_vol_atlas_info,read_igzip_slice,get_intersection,get_bounding_box_inds
-
+from utils import read_igzip_slice,get_intersection,get_bounding_box_inds,get_image_and_compare,compute_roi_bbox_overlaps
 
 from ..base import Atlas,compare_images,ROIStats
 
@@ -10,6 +9,8 @@ import numpy as np
 import pandas as pd
 
 import ConWhAt
+
+from joblib import Parallel,delayed
 
 
 class VolAtlas(Atlas):
@@ -37,30 +38,7 @@ class VolAtlas(Atlas):
 
     self.bboxes = pd.read_csv(self.atlas_dir + '/bounding_boxes.txt', sep=',')
 
-
-  def compute_roi_bbox_overlaps(self,roi_file):
-
-    roi_bbox = get_bounding_box_inds(roi_file) 
-
-    bbox_isol,bbox_propol = [],[]
-    
-    for ix in self.bboxes.index:
-
-      bbox = self.bboxes.ix[ix].values
-
-      if True in np.isnan(bbox): SI = 0.
-      else: 
-        bbox = [[bbox[0],bbox[1]],[bbox[2],bbox[3]],[bbox[4],bbox[5]]]
-        SI = get_intersection(roi_bbox,bbox)
-      bbox_isol.append(SI!=0)
-      bbox_propol.append(SI)
-
-    return bbox_isol,bbox_propol
-
-
-
-  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip'):
-
+  def compute_hit_stats(self,roi_file,idxs,readwith='indexgzip',n_jobs=1):
     """
     idxs correspond to the entries in the 'mappings' 
     attribute of the atlas_info
@@ -88,10 +66,11 @@ class VolAtlas(Atlas):
     if idxs == 'all': idxs = range(self.image_file_mappings.shape[0])
 
     # only read files with overlapping bounding boxes
-    bbox_isol,bbox_propol = self.compute_roi_bbox_overlaps(roi_file) #est_file)
+    bbox_isol,bbox_propol = compute_roi_bbox_overlaps(self.bboxes,roi_file) #est_file)
     bbox_isol_idx = np.nonzero(bbox_isol)[0]
     idxs = [idx for idx in idxs if idx in bbox_isol_idx]
 
+    """
     for idx in idxs:
       
       #_name,_file,_vol = self.atlas_info['mappings'][idx]
@@ -107,12 +86,32 @@ class VolAtlas(Atlas):
       comp = compare_images(roi_img,cnxn_dat)
   
       res.append([_name,_nii_file,_4dvolind,comp])
+    """
 
+
+
+    """     
+    def get_image_and_compare(idx,file_mappings,roi_img):
+
+      _name,_nii_file,_nii_file_id,_4dvolind = file_mappings.ix[idx]
+
+      cnxn_dat = np.squeeze(read_igzip_slice(_nii_file,int(_4dvolind)))
+
+      comp = compare_images(roi_img,cnxn_dat)
+  
+      comparisons = [_name,_nii_file,_4dvolind,comp]
+
+      return comparisons
+
+    """
+
+    res = Parallel(n_jobs=n_jobs)(delayed(get_image_and_compare)(idx,self.image_file_mappings,roi_img) for idx in idxs)
 
     df = pd.concat({r[0]: pd.DataFrame(r[3].values(),index=r[3].keys(),
                                        columns=['val']) for r in res})
-    df.index.names = ['structure', 'metric']
-    
+    df.index.names = ['name', 'metric']
+    df = df.unstack('metric')['val'] 
+ 
     return res,df
 
 
