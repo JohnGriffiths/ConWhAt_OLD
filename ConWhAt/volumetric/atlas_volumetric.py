@@ -310,9 +310,21 @@ class VolConnAtlas(VolAtlas):
 
   def make_nx_graph(self):
 
-    G = nx.DiGraph()
+    G = nx.Graph()
     ifms = self.image_file_mappings
     bbs = self.bboxes
+
+
+    # add node info
+    for node_it,node in enumerate(self.region_labels):
+
+      rl = self.region_labels[node_it]
+      hemi = self.hemispheres[node_it]
+      ctx = self.cortex[node_it]
+
+      G.add_node(node_it, attr_dict={'region_label': rl,
+                                     'hemisphere': hemi,
+                                     'cortex': ctx})
 
     # add edge info
     for idx in ifms.index:
@@ -323,20 +335,19 @@ class VolConnAtlas(VolAtlas):
       ad.update(bbs.ix[idx])
       ad['idx'] = idx
       ad['weight'] = self.weights[roi1,roi2]
+
+      def gethemi(num):
+        if num == 1: return 'L'
+        else:        return 'R'
+      n1,n2 = G.node[roi1],G.node[roi2]
+      fullname  = gethemi(n1['hemisphere']) + '_' + n1['region_label']
+      fullname += '_to_'
+      fullname += gethemi(n2['hemisphere']) + '_' + n2['region_label']
+
+      ad['fullname'] = fullname
+
       G.add_edge(roi1,roi2,attr_dict=ad)
     
-
-    # add node info
-    for node_it,node in enumerate(self.region_labels):
-    
-      rl = self.region_labels[node_it]
-      hemi = self.hemispheres[node_it]
-      ctx = self.cortex[node_it]
-    
-      G.node[node_it].update({'region_label': rl,
-                              'hemisphere': hemi,
-                              'cortex': ctx})
-
 
     self.Gnx = G
 
