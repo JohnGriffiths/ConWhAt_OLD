@@ -182,6 +182,27 @@ def get_bounding_box_inds(dat):
     return [(np.nan,np.nan),(np.nan,np.nan),(np.nan,np.nan)]
 
 
+
+def compute_roi_bbox_overlaps(bboxes,roi_file):
+`
+    roi_bbox = get_bounding_box_inds(roi_file)
+
+    bbox_isol,bbox_propol = [],[]
+
+    for ix in bboxes.index:
+
+      bbox = bboxes.ix[ix].values
+
+      if True in np.isnan(bbox): SI = 0.
+      else:
+        bbox = [[bbox[0],bbox[1]],[bbox[2],bbox[3]],[bbox[4],bbox[5]]]
+        SI = get_intersection(roi_bbox,bbox)
+      bbox_isol.append(SI!=0)
+      bbox_propol.append(SI)
+
+    return bbox_isol,bbox_propol
+
+
     
 def plot_cube_from_bb(bb,ax=None,c='b'):
 
