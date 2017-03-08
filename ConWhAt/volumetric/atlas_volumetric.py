@@ -18,6 +18,10 @@ import seaborn as sns
 from nilearn.plotting import plot_stat_map
 from nilearn.image import index_img
 
+import yaml
+
+import networkx as nx
+
 class VolAtlas(Atlas):
   """
   
@@ -235,22 +239,22 @@ class VolConnAtlas(VolAtlas):
     VolAtlas.__init__(self, atlas_name)
 
     self.load_connectivity(conn_name)
-
+    self.make_nx_graph()
 
 
   def load_connectivity(self,conn_name):
 
 
-    weights_file = '%s/%s.txt' %(self.at_dir,conn_name)
-    tract_lengths_file = '%s/tract_lengths.txt' % self.at_dir
-    region_labels_file = '%s/region_labels.txt' % self.at_dir
-    region_xyzs_file = '%s/region_xyzs.txt'  %self.at_dir
-    region_nii_file = '%s/region_masks.nii.gz' %self.at_dir
-    hemis_file = '%s/hemispheres.txt' % self.at_dir
-    ctx_file = '%s/cortex.txt' %self.at_dir
+    weights_file = '%s/%s.txt' %(self.atlas_dir,conn_name)
+    tract_lengths_file = '%s/tract_lengths.txt' % self.atlas_dir
+    region_labels_file = '%s/region_labels.txt' % self.atlas_dir
+    region_xyzs_file = '%s/region_xyzs.txt'  %self.atlas_dir
+    region_nii_file = '%s/region_masks.nii.gz' %self.atlas_dir
+    hemis_file = '%s/hemispheres.txt' % self.atlas_dir
+    ctx_file = '%s/cortex.txt' %self.atlas_dir
 
-    regmap_fsav_lh_file = '%s/region_mapping_fsav_lh.txt' % self.at_dir
-    regmap_fsav_rh_file = '%s/region_mapping_fsav_rh.txt' % self.at_dir  
+    regmap_fsav_lh_file = '%s/region_mapping_fsav_lh.txt' % self.atlas_dir
+    regmap_fsav_rh_file = '%s/region_mapping_fsav_rh.txt' % self.atlas_dir  
    
  
     if os.path.isfile(weights_file): 
@@ -263,10 +267,11 @@ class VolConnAtlas(VolAtlas):
 
 
     if os.path.isfile(region_labels_file):
-      self.region_labels = np.loadtxt(region_labels_file)
       self.region_labels_file = region_labels_file
+      self.region_labels = [l[:-1] for l in open(region_labels_file, 'r').readlines()]
 
-    if os.path.isfile(region_xyz_file):
+
+    if os.path.isfile(region_xyzs_file):
       self.region_xyzs = np.loadtxt(region_xyzs_file)
       self.region_xyzs_file = region_xyzs_file
 
@@ -295,7 +300,7 @@ class VolConnAtlas(VolAtlas):
      
       cfg_file = '../../config.yaml'
       rl = open(cfg_file, 'r').readlines()
-      cfg = yaml.load(rl[0])
+      cfg = yaml.load(rl[1])
       fs_subjects_dir = cfg['fs_subjects_dir']
       
       self.surf_lh_file = '%s/fsaverage/surf/lh.white' %fs_subjects_dir
@@ -303,7 +308,37 @@ class VolConnAtlas(VolAtlas):
 
 
 
+  def make_nx_graph(self):
 
+    G = nx.DiGraph()
+    ifms = self.image_file_mappings
+    bbs = self.bboxes
+
+    # add edge info
+    for idx in ifms.index:
+      ifm = ifms.ix[idx]
+      roi1,roi2 = ifm['name'].split('_to_')
+      roi1 = int(roi1); roi2 = int(roi2)
+      ad = ifm.to_dict()
+      ad.update(bbs.ix[idx])
+      ad['idx'] = idx
+      ad['weight'] = self.weights[roi1,roi2]
+      G.add_edge(roi1,roi2,attr_dict=ad)
+    
+
+    # add node info
+    for node_it,node in enumerate(self.region_labels):
+    
+      rl = self.region_labels[node_it]
+      hemi = self.hemispheres[node_it]
+      ctx = self.cortex[node_it]
+    
+      G.node[node_it].update({'region_label': rl,
+                              'hemisphere': hemi,
+                              'cortex': ctx})
+
+
+    self.Gnx = G
 
 
 
