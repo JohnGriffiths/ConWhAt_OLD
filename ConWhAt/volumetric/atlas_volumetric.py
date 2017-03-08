@@ -12,6 +12,11 @@ import ConWhAt
 
 from joblib import Parallel,delayed
 
+from matplotlib import pyplot as plt
+import seaborn as sns
+
+from nilearn.plotting import plot_stat_map
+from nilearn.image import index_img
 
 class VolAtlas(Atlas):
   """
@@ -198,6 +203,23 @@ class VolAtlas(Atlas):
     res = ROIStats()
     print 'blah'
 
+
+
+  def plot_image(self,name=None,idx=None,ax=None,plotargs={'cmap': 'coolwarm'}):
+
+    if name: 
+      m = self.image_file_mappings.set_index('name').ix[name]
+    elif idx: 
+      m = self.image_file_mappings.ix[idx]
+
+    nf = m['nii_file']
+    vi = m['4dvolind']
+
+    if not ax:  fig, ax = plt.subplots()
+  
+    plot_stat_map(index_img(nf,vi),axes=ax,**plotargs)
+
+    return ax
 
 
 
