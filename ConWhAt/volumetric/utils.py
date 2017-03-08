@@ -87,6 +87,19 @@ def get_vol_atlas_info(atlas_name):
 
 
 
+def get_image_and_compare(idx,file_mappings,roi_img):
+
+    _name,_nii_file,_nii_file_id,_4dvolind = file_mappings.ix[idx]
+
+    cnxn_dat = np.squeeze(read_igzip_slice(_nii_file,int(_4dvolind)))
+
+    comp = compare_images(roi_img,cnxn_dat)
+
+    comparisons = [_name,_nii_file,_4dvolind,comp]
+
+    return comparisons
+
+
 def read_igzip_slice(fname,volnum):
  
   volnum = int(volnum)
