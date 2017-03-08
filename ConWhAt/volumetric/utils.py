@@ -20,7 +20,7 @@ import numpy as np
 from itertools import product,combinations
 
 
-
+"""
 def get_vol_atlas_info(atlas_name):
 
   returndict = {'atlas_name':atlas_name}
@@ -58,20 +58,18 @@ def get_vol_atlas_info(atlas_name):
  
     at_dir  = os.path.abspath('../atlases/volumetric/dipy_dsi_sd4_l2k8_sc33')
     
-    """
-    at_fstr = at_dir + '/vismap_grp_cat_rois_v2_%s_norm.nii.gz'
+    #at_fstr = at_dir + '/vismap_grp_cat_rois_v2_%s_norm.nii.gz'
 
-    mappings = []
-    nrois = 83
+    #mappings = []
+    #nrois = 83
 
-    for roi1 in range(nrois):
-      nii_file = at_fstr %roi1
-      for roi2 in range(nrois):
-        _name = '%s_to_%s' %(roi1,roi2)
-        _vol = roi2
-        mappings.append([_name,nii_file,_vol])
+    #for roi1 in range(nrois):
+    #  nii_file = at_fstr %roi1
+    #  for roi2 in range(nrois):
+    #    _name = '%s_to_%s' %(roi1,roi2)
+    #    _vol = roi2
+    #    mappings.append([_name,nii_file,_vol])
 
-    """
 
     #mappings = np.loadtxt(at_dir + '/mappings.txt')
 
@@ -84,8 +82,7 @@ def get_vol_atlas_info(atlas_name):
     print 'atlas name not recognized' 
 
   return returndict
-
-
+"""
 
 def get_image_and_compare(idx,file_mappings,roi_img):
 
